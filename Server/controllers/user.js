@@ -1,27 +1,17 @@
 const User = require("../model/user");
-const validator = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
+const { validationResult } = require("express-validator");
 
 exports.createUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     // Validate use input
-    const errors = {};
-    if (!validator.isEmail(email)) errors.email = "Plaese enter valid email.";
-    if (!validator.isLength(password, { min: 5 }))
-      errors.password = "Password must be atleast 5 characters long.";
+    const errors = validationResult(req);
 
-    //  Validate user data
-
-    const isEmailExist = await User.findOne({ email });
-    if (isEmailExist) errors.email = "Email already taken.";
-
-    if (Object.keys(errors).length > 0) {
-      return res
-        .status(400)
-        .json({ message: "Failed to create user.", error: errors });
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
     const encryptedPassword = await bcrypt.hash(password, 6);
@@ -45,24 +35,10 @@ exports.signinUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const errors = {};
+    const errors = validationResult(req);
 
-    if (!validator.isEmail(email)) errors.email = "Plaese enter valid email.";
-    if (validator.isEmpty(password))
-      errors.password = "Password must not be empty.";
-
-    if (Object.keys(errors).length > 0) {
-      return res.status(201).json({ message: "Invalid Input", error: errors });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const comparePasswords = await bcrypt.compare(password, user.password);
-    if (!comparePasswords) {
-      return res.status(401).json({ message: "Password did not match" });
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
     const token = jwt.sign({ email }, process.env.JWT_SECRET);

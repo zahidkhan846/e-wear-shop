@@ -10,17 +10,14 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState(null);
+  const [errors, setErrors] = useState();
 
   const history = useHistory();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
-    setEmail("");
-    setPassword("");
-    setErrors(null);
+    setErrors();
     try {
       await axios.post("/user/create-user", {
         email,
@@ -29,7 +26,16 @@ function Register() {
       setLoading(false);
       history.push("/login");
     } catch (err) {
-      setErrors(err.response.data.error);
+      const transformedErros = {};
+      err.response.data.errors.forEach((error) => {
+        if (error.param === "email") {
+          transformedErros.email = error.msg;
+        }
+        if (error.param === "password") {
+          transformedErros.password = error.msg;
+        }
+      });
+      setErrors(transformedErros);
       setLoading(false);
     }
   };

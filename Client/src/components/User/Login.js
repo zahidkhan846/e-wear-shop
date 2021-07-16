@@ -3,8 +3,8 @@ import Button from "../UI/Button/Button";
 import Input from "../UI/Input/Input";
 import styles from "./User.module.css";
 import headerImage from "../../images/header.jpg";
-import { Redirect, useHistory } from "react-router";
-import { Link } from "react-router-dom";
+import { Redirect } from "react-router";
+import { Link, useHistory } from "react-router-dom";
 import axios from "../../config/axios";
 import { useAuth } from "../../store/contexts/AuthContext";
 
@@ -13,29 +13,33 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState();
 
   const history = useHistory();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setLoading(true);
-    setEmail("");
-    setPassword("");
-    setErrors(null);
+    setErrors();
     try {
-      await axios.post("/user/signin-user", {
+      const res = await axios.post("/user/signin-user", {
         email,
         password,
       });
-      window.location.reload();
-      setLoading(false);
-      history.push("/");
+      if ((res.status = 200)) {
+        window.location.reload();
+        history.push("/");
+      }
     } catch (err) {
-      setErrors(err.response.data.error);
-      setLoading(false);
+      const transformedErros = {};
+      err.response.data.errors.forEach((error) => {
+        if (error.param === "email") {
+          transformedErros.email = error.msg;
+        }
+        if (error.param === "password") {
+          transformedErros.password = error.msg;
+        }
+      });
+      setErrors(transformedErros);
     }
   };
 
@@ -54,9 +58,7 @@ function Login() {
                 <span className="text-pink">Login</span>{" "}
               </h1>
 
-              <p className="py-min text-grey">
-                <span>Enter your email and Password</span>
-              </p>
+              <p className="py-min text-grey">Enter your email and Password</p>
               <Input
                 htmlFor="email"
                 type="email"
@@ -94,17 +96,19 @@ function Login() {
                 <strong className="text-pink">Tearms of Use</strong> &{" "}
                 <strong className="text-pink">Privacy Policy</strong>
               </p>
-              <Button
-                disabled={loading}
-                type="submit"
-                customstyle="btn-primary full-width"
-              >
+              <Button type="submit" customstyle="btn-primary full-width">
                 Continue
               </Button>
               <p className="mt-1">
                 Forgot Password{" "}
                 <Link className={styles.loginLink} to="/change-password">
                   Change Password
+                </Link>
+              </p>
+              <p className="mt-1">
+                Don't have an account{" "}
+                <Link className={styles.loginLink} to="/register">
+                  Register
                 </Link>
               </p>
             </div>

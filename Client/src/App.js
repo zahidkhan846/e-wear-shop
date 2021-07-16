@@ -12,6 +12,7 @@ import Men from "./components/Shop/Men";
 import Kids from "./components/Shop/Kids";
 import Others from "./components/Shop/Others";
 import Login from "./components/User/Login";
+import AddProduct from "./components/Products/AddProduct";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <PrivateRoute path="/bag" component={Bag} />
         <PrivateRoute path="/orders" component={Orders} />
         <PrivateRoute path="/wishlist" component={Wishlist} />
+        <PrivateRoute path="/add-product" component={AddProduct} />
       </Switch>
     </Layout>
   );
