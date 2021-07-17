@@ -3,8 +3,8 @@ import Button from "../UI/Button/Button";
 import Input from "../UI/Input/Input";
 import styles from "./User.module.css";
 import headerImage from "../../images/header.jpg";
-import { Redirect } from "react-router";
-import { Link, useHistory } from "react-router-dom";
+import { Redirect, useHistory } from "react-router";
+import { Link } from "react-router-dom";
 import axios from "../../config/axios";
 import { useAuth } from "../../store/contexts/AuthContext";
 
@@ -19,29 +19,23 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors();
     try {
       const res = await axios.post("/user/signin-user", {
         email,
         password,
       });
-      if ((res.status = 200)) {
-        window.location.reload();
+      if (res.status === 200) {
         history.push("/");
+        window.location.reload();
       }
+      console.log(res);
     } catch (err) {
-      const transformedErros = {};
-      err.response.data.errors.forEach((error) => {
-        if (error.param === "email") {
-          transformedErros.email = error.msg;
-        }
-        if (error.param === "password") {
-          transformedErros.password = error.msg;
-        }
-      });
-      setErrors(transformedErros);
+      console.log(err);
+      setErrors(err.response.data.error);
     }
   };
+
+  console.log(errors);
 
   if (authenticated) {
     return <Redirect to="/" />;
@@ -58,7 +52,9 @@ function Login() {
                 <span className="text-pink">Login</span>{" "}
               </h1>
 
-              <p className="py-min text-grey">Enter your email and Password</p>
+              <p className="py-min text-grey">
+                <span>Enter your email and Password</span>
+              </p>
               <Input
                 htmlFor="email"
                 type="email"
@@ -103,12 +99,6 @@ function Login() {
                 Forgot Password{" "}
                 <Link className={styles.loginLink} to="/change-password">
                   Change Password
-                </Link>
-              </p>
-              <p className="mt-1">
-                Don't have an account{" "}
-                <Link className={styles.loginLink} to="/register">
-                  Register
                 </Link>
               </p>
             </div>

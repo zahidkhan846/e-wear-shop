@@ -20,16 +20,6 @@ const userSchema = new mongoose.Schema({
   isSeller: {
     type: Boolean,
     required: false,
-    default: false,
-  },
-  cart: {
-    type: Array,
-  },
-  orders: {
-    type: Array,
-  },
-  products: {
-    type: Array,
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date },

@@ -1,17 +1,27 @@
 const User = require("../model/user");
+const validator = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
-const { validationResult } = require("express-validator");
 
 exports.createUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     // Validate use input
-    const errors = validationResult(req);
+    const errors = {};
+    if (!validator.isEmail(email)) errors.email = "Plaese enter valid email.";
+    if (!validator.isLength(password, { min: 5 }))
+      errors.password = "Password must be atleast 5 characters long.";
 
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    //  Validate user data
+
+    const isEmailExist = await User.findOne({ email });
+    if (isEmailExist) errors.email = "Email already taken.";
+
+    if (Object.keys(errors).length > 0) {
+      return res
+        .status(400)
+        .json({ message: "Failed to create user.", error: errors });
     }
 
     const encryptedPassword = await bcrypt.hash(password, 6);
@@ -35,10 +45,36 @@ exports.signinUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const errors = validationResult(req);
+    const errors = {};
 
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    if (!validator.isEmail(email)) {
+      errors.email = "Plaese enter valid email.";
+    }
+
+    if (validator.isEmpty(password)) {
+      errors.password = "Password must not be empty.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(401).json({ error: errors });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      errors.email = "User not found.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(404).json({ error: errors });
+    }
+
+    const comparePasswords = await bcrypt.compare(password, user.password);
+    if (!comparePasswords) {
+      errors.password = "Password did not match.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(401).json({ error: errors });
     }
 
     const token = jwt.sign({ email }, process.env.JWT_SECRET);
